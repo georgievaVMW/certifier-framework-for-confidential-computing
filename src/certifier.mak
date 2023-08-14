@@ -36,9 +36,9 @@ O= $(OBJ_DIR)
 I= $(INC_DIR)
 CL=..
 
-INCLUDE=-I $(I) -I/usr/local/opt/openssl@1.1/include/ -I $(S)/sev-snp
+INCLUDE=-I $(I) -I/usr/local/opt/openssl@1.1/include/ -I $(S)/sev-snp -I /usr/local/Cellar/protobuf/3.20.3/include
 
-CFLAGS_COMMON = $(INCLUDE) -g -Wall -std=c++11 -Wno-unused-variable -D X64 -Wno-deprecated-declarations
+CFLAGS_COMMON = $(INCLUDE) -g -Wall -std=c++11 -Wno-unused-variable -D X64 -Wno-deprecated-declarations -DMACOS=1
 
 CFLAGS  = $(CFLAGS_COMMON) -O3
 CFLAGS_PIC =
@@ -67,7 +67,7 @@ SWIG_FLAGS = -Wallkw
 # Base of Certifier Framework's interface file for use by SWIG
 SWIG_CERT_INTERFACE = certifier_framework
 
-PY_INCLUDE = -I /usr/include/python3.10/
+PY_INCLUDE = -I /usr/include/python3.10/ -I /usr/local/include/python3/
 
 #export LD_LIBRARY_PATH=/usr/local/lib
 LDFLAGS= -L $(LOCAL_LIB) -lprotobuf -lgtest -lgflags -lpthread -L/usr/local/opt/openssl@1.1/lib/ -lcrypto -lssl
