@@ -42,7 +42,7 @@ UNAME_S := $(shell uname -s)
 
 CFLAGS_COMMON = $(INCLUDE) -g -Wall -Werror -std=c++11 -Wno-unused-variable -D X64 -Wno-deprecated-declarations
 ifeq ($(UNAME_S),Darwin)
-    CCFLAGS_COMMON += -DMACOS=1
+    CFLAGS_COMMON += -DMACOS=1
 endif
 
 CFLAGS  = $(CFLAGS_COMMON) -O3
