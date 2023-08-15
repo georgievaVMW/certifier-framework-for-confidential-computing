@@ -26,7 +26,7 @@ typedef unsigned short     uint16_t;
 typedef unsigned short     __u16;
 typedef unsigned           uint32_t;
 typedef unsigned           __u32;
-typedef unsigned long      uint64_t;
+typedef unsigned long long uint64_t;
 typedef unsigned long long __u64;
 #endif
 
