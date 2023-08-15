@@ -39,9 +39,25 @@ CL=..
 
 INCLUDE = -I $(I) -I/usr/local/opt/openssl@1.1/include/ -I $(S)/sev-snp -I $(S)/gramine
 
-CFLAGS_COMMON = $(INCLUDE) -g -std=c++11 -D X64 -Wall -Wno-unused-variable -Wno-deprecated-declarations
+UNAME_S := $(shell uname -s)
+
+CFLAGS_COMMON = $(INCLUDE) -g -std=c++14 -D X64 -Werror -Wall -Wno-unused-variable -Wno-deprecated-declarations
+
+ifeq ($(UNAME_S),Darwin)
+    CFLAGS_COMMON += -DMACOS=1
+endif
 
 CFLAGS  = $(CFLAGS_COMMON) -O3
+
+# Workaround for error at link time that shows up only on Mac/OSX:
+# Undefined symbols . "google::protobuf::internal::InternalMetadata::~InternalMetadata()", referenced from: time_point::time_point(time_point const&) in certifier.pb.o ...
+# See: https://github.com/facebookincubator/velox/issues/2029
+#      https://github.com/protocolbuffers/protobuf/issues/9947
+# Allegedly fixed in latest protobuf under:
+#   https://github.com/facebookincubator/velox/pull/2042
+ifeq ($(UNAME_S),Darwin)
+    CFLAGS_PB := -DNDEBUG
+endif
 
 ifdef ENABLE_SEV
 
@@ -182,7 +198,7 @@ $(O)/certifier_tests_wrap.o: $(S)/certifier_tests_wrap.cc $(I)/certifier.pb.h $(
 
 $(O)/certifier.pb.o: $(S)/certifier.pb.cc $(I)/certifier.pb.h
 	@echo "\ncompiling $<"
-	$(CC) $(CFLAGS) -o $(@D)/$@ -c $<
+	$(CC) $(CFLAGS) $(CFLAGS_PB) -o $(@D)/$@ -c $<
 
 $(O)/certifier.o: $(S)/certifier.cc $(I)/certifier.pb.h $(I)/certifier.h
 	@echo "\ncompiling $<"

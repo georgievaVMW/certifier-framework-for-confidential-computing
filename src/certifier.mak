@@ -40,7 +40,8 @@ INCLUDE=-I $(I) -I/usr/local/opt/openssl@1.1/include/ -I $(S)/sev-snp -I /usr/lo
 
 UNAME_S := $(shell uname -s)
 
-CFLAGS_COMMON = $(INCLUDE) -g -Wall -Werror -std=c++11 -Wno-unused-variable -D X64 -Wno-deprecated-declarations
+CFLAGS_COMMON = $(INCLUDE) -g -Wall -Werror -std=c++14 -Wno-unused-variable -D X64 -Wno-deprecated-declarations
+
 ifeq ($(UNAME_S),Darwin)
     CFLAGS_COMMON += -DMACOS=1
 endif
