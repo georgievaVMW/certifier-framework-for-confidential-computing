@@ -10,7 +10,13 @@ set -Eeuo pipefail
 # Setup script globals, to establish curdir and root path to Certifier code base
 Me=$(basename "$0")
 
-numCPUs=$(grep -c "^processor" /proc/cpuinfo)
+OSName=$(uname -s)
+if [ "${OSName}" = "Linux" ]; then
+    numCPUs=$(grep -c "^processor" /proc/cpuinfo)
+else
+    numCPUs=2
+fi
+
 if [ "${numCPUs}" -eq "0" ]; then numCPUs=1; fi
 
 # Establish root-dir for Certifier library.
@@ -19,11 +25,11 @@ pushd "$(dirname "$0")" > /dev/null 2>&1
 cd ../../
 
 # shellcheck disable=SC2046
-CERT_PROTO="$(pwd)"; export CERT_PROTO
+CERT_ROOT="$(pwd)"; export CERT_ROOT
 
 popd > /dev/null 2>&1
 
-echo "${Me}: CERT_PROTO=${CERT_PROTO}"
+echo "${Me}: CERT_ROOT=${CERT_ROOT}"
 
 echo " "
 echo "******************************************************************"

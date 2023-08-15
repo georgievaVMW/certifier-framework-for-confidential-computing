@@ -22,14 +22,32 @@ popd > /dev/null 2>&1
 
 echo "${Me}: CERT_ROOT=${CERT_ROOT}"
 
-pushd ${CERT_ROOT}/src > /dev/null 2>&1
+subdir="src"
+echo "***************************************************************************"
+echo "${Me}: ${subdir}/ sub-dir ..."
+echo " "
+pushd "${CERT_ROOT}/${subdir}" > /dev/null 2>&1
 
-make -f certifier.mak clean && make -f certifier.mak -j${numCPUs}
+# make -f certifier.mak clean && make -f certifier.mak -j${numCPUs}
 
-make -f certifier_tests.mak clean && make -f certifier_tests.mak -j${numCPUs}
+# make -f certifier_tests.mak clean && make -f certifier_tests.mak -j${numCPUs}
 
-make -f certifier.mak --always-make -j${numCPUs} sharedlib
+# make -f certifier.mak --always-make -j${numCPUs} sharedlib
 
-make -f certifier_tests.mak --always-make -j${numCPUs} sharedlib
+# make -f certifier_tests.mak --always-make -j${numCPUs} sharedlib
 
 popd > /dev/null 2>&1
+
+subdir="utilities"
+echo "***************************************************************************"
+echo "${Me}: ${subdir}/ sub-dir ..."
+echo " "
+pushd "${CERT_ROOT}/${subdir}" > /dev/null 2>&1
+
+for mkfile in cert_utility.mak policy_utilities.mak policy_generator.mak
+do
+    make -f ${mkfile} clean && make -f ${mkfile} -j${numCPUs}
+done
+
+popd > /dev/null 2>&1
+
