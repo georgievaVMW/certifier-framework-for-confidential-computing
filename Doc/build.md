@@ -22,6 +22,8 @@ sudo ln -s /usr/local/Cellar/protobuf@3/3.20.3/include/google /usr/local/include
 brew install googletest
 brew install gflags
 
-brew install swig
+brew link --overwrite protobuf@3
 
+brew install protoc-gen-go
+brew install swig
 ```

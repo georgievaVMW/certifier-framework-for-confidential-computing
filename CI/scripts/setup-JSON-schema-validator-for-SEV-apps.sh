@@ -14,10 +14,14 @@ OSName=$(uname -s)
 if [ "${OSName}" = "Linux" ]; then
     numCPUs=$(grep -c "^processor" /proc/cpuinfo)
 else
-    numCPUs=2
+    numCPUs=$(sysctl -n hw.ncpu)
 fi
 
 if [ "${numCPUs}" -eq "0" ]; then numCPUs=1; fi
+
+# Cap # of -j threads for make to 8
+numMakeThreads=${numCPUs}
+if [ "${numMakeThreads}" -gt 8 ]; then numMakeThreads=8; fi
 
 # Establish root-dir for Certifier library.
 pushd "$(dirname "$0")" > /dev/null 2>&1
@@ -58,7 +62,7 @@ if [ ! -d ./build ]; then mkdir build; fi
 pushd build
 
 cmake ..
-make -j${numCPUs}
+make -j${numMakeThreads}
 
 sudo make install
 
@@ -81,7 +85,7 @@ if [ ! -d ./build ]; then mkdir build; fi
 pushd build
 
 cmake .. -DBUILD_SHARED_LIBS=ON ..
-make -j${numCPUs}
+make -j${numMakeThreads}
 sudo make install
 
 set +x
