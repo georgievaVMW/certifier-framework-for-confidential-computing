@@ -1082,10 +1082,21 @@ bool certifier::utilities::authenticated_encrypt(const char *alg_name,
                                                  byte *      in,
                                                  int         in_len,
                                                  byte *      key,
+                                                 int         key_len,
                                                  byte *      iv,
+                                                 int         iv_len,
                                                  byte *      out,
                                                  int *       out_size) {
 
+  int key_size = cipher_key_byte_size(alg_name);
+  if (key_size > key_len) {
+    printf("%s() error, line: %d, authenticated_encrypt: key length too short\n"
+           "%s\n",
+           __func__,
+           __LINE__,
+           alg_name);
+    return false;
+  }
   if (strcmp(alg_name, "aes-256-cbc-hmac-sha256") == 0) {
     return aes_256_cbc_sha256_encrypt(in, in_len, key, iv, out, out_size);
   } else if (strcmp(alg_name, "aes-256-cbc-hmac-sha384") == 0) {
@@ -1106,8 +1117,18 @@ bool certifier::utilities::authenticated_decrypt(const char *alg_name,
                                                  byte *      in,
                                                  int         in_len,
                                                  byte *      key,
+                                                 int         key_len,
                                                  byte *      out,
                                                  int *       out_size) {
+  int key_size = cipher_key_byte_size(alg_name);
+  if (key_size > key_len) {
+    printf("%s() error, line: %d, authenticated_decrypt: key length too short\n"
+           "%s\n",
+           __func__,
+           __LINE__,
+           alg_name);
+    return false;
+  }
 
   if (strcmp(alg_name, "aes-256-cbc-hmac-sha256") == 0) {
     return aes_256_cbc_sha256_decrypt(in, in_len, key, out, out_size);
