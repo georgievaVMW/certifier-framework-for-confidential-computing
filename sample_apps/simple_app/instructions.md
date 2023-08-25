@@ -101,16 +101,37 @@ flowchart LR
       id31 -- "--platform_key_output_file" --> id34(platform_key_file.bin)
       id31 -- "--attest_key_output_file" --> id35(attest_key_file.bin)
     end
-      subgraph sg4 [4. Embed policy key]
-        direction LR
-        id33(policy_cert_file.bin) -- "--input" --> embed_policy_key.exe
-        embed_policy_key.exe -- "--output" --> id41([../policy_key.cc, linked with example_app.cc])
-      end
-      subgraph sg5 [5. Compile example_app]
-        direction LR
-        id41([../policy_key.cc]) -- "#include" --> example_app.cc
-        example_app.cc -- "make -f example.mak" --> example_app.exe
-      end
+
+    subgraph sg4 [4. Embed policy key]
+      direction LR
+      id33(policy_cert_file.bin) -- "--input" --> embed_policy_key.exe
+      embed_policy_key.exe -- "--output" --> id41([../policy_key.cc, linked with example_app.cc])
+    end
+
+    subgraph sg5 [5. Compile example_app]
+      direction LR
+      id41([../policy_key.cc]) -- "#include" --> example_app.cc
+      example_app.cc -- "make -f example.mak" --> example_app.exe
+    end
+
+    subgraph shg6 [6. Measure trusted application]
+      direction LR
+      example_app.exe -- "--input" --> id6.1[measurement_utility.exe --type=hash]
+      id6.1 -- "--output" --> example_app.measurement
+    end
+
+    subgraph shg7a1 [7a.1. Construct Policy Key]
+      direction LR
+      id34 --> id7a1_1(make_unary_vse_clause.exe)
+      id7a1_1 -- "--key_subject=platform_key_file.bin\n-verb='is-trusted-for-attestation'\n--output=" --> 7a1_o(ts1.bin)
+    end
+
+    subgraph shg7a2 [7a.2. Construct Policy Key\n]
+      direction LR
+      id32 --> id7a2_1(make_indirect_vse_clause.exe)
+      7a1_o -- "--clause=ts1.bin" --> id7a2_1
+      id7a2_1 -- "--key_subject=policy_key_file.bin\n--clause=ts1.bin\n--verb='says'\n--output=" --> vse_policy1.bin
+    end
 ```
 
 ----
