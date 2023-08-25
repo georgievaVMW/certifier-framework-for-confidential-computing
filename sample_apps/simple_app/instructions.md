@@ -39,13 +39,11 @@ Here is a pictorial depiction of the overall workflow you need to follow to buil
 and execute this simple app.
 
 ```mermaid
-flowchart
+flowchart TB
 
-  subgraph 1.3 Build Certificate-related Utilities
+  subgraph 1.3 Build Policy Generator
   direction TB
-    id1(make -f cert_utility.mak) --> id11([cert_utility.exe])
-    id1(make -f cert_utility.mak) --> id12([measurement_init.exe])
-    id1(make -f cert_utility.mak) --> id13([key_utility.exe])
+    id3(make -f policy_generator.mak) --> id31([policy_generator.exe])
   end
 
   subgraph 1.2 Build Policy Utilities
@@ -69,33 +67,20 @@ flowchart
     id2(make -f policy_utilities.mak) --> id217([simulated_sev_key_generation.exe])
   end
 
-  subgraph 1.1 Build Policy Utilities
-  direction LR
-    id3(make -f policy_generator.mak) --> id31([policy_generator.exe])
+  subgraph 1.1 Build Certificate-related Utilities
+  direction TB
+    id1(make -f cert_utility.mak) --> id11([cert_utility.exe])
+    id1(make -f cert_utility.mak) --> id12([measurement_init.exe])
+    id1(make -f cert_utility.mak) --> id13([key_utility.exe])
   end
 
-```
-
-```mermaid
-flowchart LR
-  subgraph TOP
-    direction TB
-    subgraph B1
-        direction RL
-        i1 -->f1
-    end
-    subgraph B2
-        direction BT
-        i2 -->f2
-    end
-  end
 ```
 
 ```mermaid
  flowchart TB
     subgraph sg3 [3. Generate the policy key and self-signed certificate]
       direction TB
-      id12(cert_utility.exe) --> id31(["--operation=generate-policy-key-and-test-keys"])
+      id12(cert_utility.exe) --> id31{{"--operation=generate-policy-key-and-test-keys"}}
       id31 -- "--policy_key_output_file"   --> id32(policy_key_file.bin)
       id31 -- "--policy_cert_output_file"  --> id33(policy_cert_file.bin)
       id31 -- "--platform_key_output_file" --> id34(platform_key_file.bin)
@@ -151,11 +136,50 @@ flowchart LR
     direction LR
     id7a2_o --> id7c1_exe(make_signed_claim_from_vse_clause.exe)
     id32    --> id7c1_exe
-    id7c1_exe -- "--duration=9000\n--vse_file=vse_policy1.bin\n--private_key_file=policy_key_file.bin\n--output=" --> signed_claim_1.bin
+    id7c1_exe -- "--duration=9000\n--vse_file=vse_policy1.bin\n--private_key_file=policy_key_file.bin\n--output=" --> id7c1_o1(signed_claim_1.bin)
 
     id7b2_o --> id7c1_exe
-    id7c1_exe -- "--duration=9000\n--vse_file=vse_policy2.bin\n--private_key_file=policy_key_file.bin\n--output=" --> signed_claim_2.bin
+    id7c1_exe -- "--duration=9000\n--vse_file=vse_policy2.bin\n--private_key_file=policy_key_file.bin\n--output=" --> id7c1_o2(signed_claim_2.bin)
   end
+
+  subgraph sg7d [7d. Combine signed claims]
+    direction LR
+    id7c1_o1 --> id7d_exe(package_claims.exe)
+    id7c1_o2 --> id7d_exe
+    id7d_exe -- "--input=signed_claim(s)\n--output=" --> id7d_o(policy.bin)
+  end
+
+  subgraph sg7e [7e. Print the policy]
+    id7d_o --> id7d_exe2(print_packaged_claims.exe)
+    id7d_exe2 -- "--input=policy.bin" --> id7e_op>Policy print output]
+  end
+
+  subgraph sg7f1 [7f.1 Construct statement and sign it]
+    direction LR
+    id35      --> id7f1_exe(make_unary_vse_clause.exe)
+    id7f1_exe -- "--key_subject=attest_key_file.bin\n--verb='is-trusted-for-attestation'\n--output=" --> id7f1_o(tsc1.bin)
+  end
+
+  subgraph sg7f2 [7f.2 Construct statement and sign it]
+    direction LR
+    id34 --> id7f2_exe(make_indirect_vse_clause.exe)
+    id7f1_o --> id7f2_exe
+    id7f2_exe -- "--key_subject=platform_key_file.bin\n--verb='says'\n--clause=tsc1.bin\n--output=" --> id7f2_o(vse_policy3.bin)
+  end
+
+  subgraph sg7f3 [7f.3 Construct statement and sign it]
+    direction LR
+    id7f2_o --> id7f3_exe(make_signed_claim_from_vse_clause.exe)
+    id34 --> id7f3_exe
+    id7f3_exe -- "--duration=9000\n--vse_file=vse_policy3.bin\n--private_key_file=platform_key_file.bin\n--output=" --> id7f3_o(platform_attest_endorsement.bin)
+  end
+
+  subgraph sg7g [7g. Print platform endorsement]
+    direction LR
+    id7f3_o --> id7g_exe(print_signed_claim.exe)
+    id7g_exe -- "--input=platform_attest_endorsement.bin" --> id7g_op>Platform attestation output]
+  end
+
 ```
 
 ----
