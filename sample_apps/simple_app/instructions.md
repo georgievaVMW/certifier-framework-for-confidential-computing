@@ -96,10 +96,10 @@ flowchart LR
     subgraph sg3 [3. Generate the policy key and self-signed certificate]
       direction TB
       id12(cert_utility.exe) --> id31(["--operation=generate-policy-key-and-test-keys"])
-      id31 -- "--policy_key_output_file" --> id32(policy_key_file.bin)
-      id31 -- "--policy_cert_output_file" --> id33(policy_cert_file.bin)
+      id31 -- "--policy_key_output_file"   --> id32(policy_key_file.bin)
+      id31 -- "--policy_cert_output_file"  --> id33(policy_cert_file.bin)
       id31 -- "--platform_key_output_file" --> id34(platform_key_file.bin)
-      id31 -- "--attest_key_output_file" --> id35(attest_key_file.bin)
+      id31 -- "--attest_key_output_file"   --> id35(attest_key_file.bin)
     end
 
     subgraph sg4 [4. Embed policy key]
@@ -117,7 +117,7 @@ flowchart LR
     subgraph shg6 [6. Measure trusted application]
       direction LR
       example_app.exe -- "--input" --> id6.1[measurement_utility.exe --type=hash]
-      id6.1 -- "--output" --> example_app.measurement
+      id6.1 -- "--output" --> id6o(example_app.measurement)
     end
 
     subgraph shg7a1 [7a.1. Construct Policy Key]
@@ -128,10 +128,34 @@ flowchart LR
 
     subgraph shg7a2 [7a.2. Construct Policy Key\n]
       direction LR
-      id32 --> id7a2_1(make_indirect_vse_clause.exe)
-      7a1_o -- "--clause=ts1.bin" --> id7a2_1
-      id7a2_1 -- "--key_subject=policy_key_file.bin\n--clause=ts1.bin\n--verb='says'\n--output=" --> vse_policy1.bin
+      id32 --> id7a2_exe(make_indirect_vse_clause.exe)
+      7a1_o -- "--clause=ts1.bin" --> id7a2_exe
+      id7a2_exe -- "--key_subject=policy_key_file.bin\n--clause=ts1.bin\n--verb='says'\n--output=" --> id7a2_o(vse_policy1.bin)
     end
+
+    subgraph shg7b1 [7b.1. Construct Policy Key\n]
+      direction LR
+      id6o --> id7b1_exe(make_indirect_vse_clause.exe)
+      id7b1_exe -- "--measurement_subject=example_app.measurement\n--verb='is_trusted'\n--output=" --> id7b1_o(ts2.bin)
+    end
+
+    subgraph shg7b2 [7b.2. Construct Policy Key\n]
+      direction LR
+      id7b1_o --> id7b2_exe(make_indirect_vse_clause.exe)
+      id32 --> id7b2_exe
+      id7b2_exe -- "--key_subject=policy_key_file.bin\n--verb='says'\n--clause='ts2.bin'\n--output=" --> id7b2_o(vse_policy2.bin)
+
+    end
+
+  subgraph sg7c1 [7c.1 Produce signed claims: For each VSE policy statement]
+    direction LR
+    id7a2_o --> id7c1_exe(make_signed_claim_from_vse_clause.exe)
+    id32    --> id7c1_exe
+    id7c1_exe -- "--duration=9000\n--vse_file=vse_policy1.bin\n--private_key_file=policy_key_file.bin\n--output=" --> signed_claim_1.bin
+
+    id7b2_o --> id7c1_exe
+    id7c1_exe -- "--duration=9000\n--vse_file=vse_policy2.bin\n--private_key_file=policy_key_file.bin\n--output=" --> signed_claim_2.bin
+  end
 ```
 
 ----
