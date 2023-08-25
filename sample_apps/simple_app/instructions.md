@@ -39,28 +39,6 @@ Here is a pictorial depiction of the overall workflow you need to follow to buil
 and execute this simple app.
 
 ```mermaid
-graph TD;
-    A-->B;
-    A-->C;
-    B-->D;
-    C-->D;
-```
-
-```mermaid
-sequenceDiagram
-    participant Alice
-    participant Bob
-    Alice->>John: Hello John, how are you?
-    loop Healthcheck
-        John->>John: Fight against hypochondria
-    end
-    Note right of John: Rational thoughts <br/>prevail!
-    John-->>Alice: Great!
-    John->>Bob: How about you?
-    Bob-->>John: Jolly good!
-```
-
-```mermaid
 flowchart
 
   subgraph Build Certificate-related Utilities
@@ -95,6 +73,25 @@ flowchart
   direction LR
     id3(make -f policy_generator.mak) --> id31([policy_generator.exe])
   end
+```
+
+```mermaid
+flowchart
+  subgraph Generate the policy key and self-signed certificate
+  direction TB
+    id12(cert_utility.exe) --> id31(["--operation=generate-policy-key-and-test-keys"])
+    id31 -- "--policy_key_output_file" --> id32(policy_key_file.bin)
+    id31 -- "--policy_cert_output_file" --> id33(policy_cert_file.bin)
+    id31 -- "--platform_key_output_file" --> id34(platform_key_file.bin)
+    id31 -- "--attest_key_output_file" --> id35(attest_key_file.bin)
+  end
+
+  subgraph Embed policy key
+  direction LR
+    id33(policy_cert_file.bin) -- "--input" --> embed_policy_key.exe
+    embed_policy_key.exe -- "--output" --> id41([../policy_key.cc, linked with example_app.cc])
+  end
+
 ```
 
 ----
