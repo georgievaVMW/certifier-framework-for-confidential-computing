@@ -39,6 +39,9 @@ Here is a pictorial depiction of the overall workflow you need to follow to buil
 and execute this simple app.
 
 ```mermaid
+---
+title: Build Workflow
+---
 flowchart TB
 
   subgraph 1.3 Build Policy Generator
@@ -76,7 +79,12 @@ flowchart TB
 
 ```
 
+----
+
 ```mermaid
+---
+title: Policy & Certificate Generation Workflow
+---
  flowchart TB
     subgraph sg3 [3. Generate the policy key and self-signed certificate]
       direction TB
