@@ -41,14 +41,14 @@ and execute this simple app.
 ```mermaid
 flowchart
 
-  subgraph Build Certificate-related Utilities
+  subgraph 1.3 Build Certificate-related Utilities
   direction TB
     id1(make -f cert_utility.mak) --> id11([cert_utility.exe])
     id1(make -f cert_utility.mak) --> id12([measurement_init.exe])
     id1(make -f cert_utility.mak) --> id13([key_utility.exe])
   end
 
-  subgraph Build Policy Utilities
+  subgraph 1.2 Build Policy Utilities
   direction LR
     id2(make -f policy_utilities.mak) --> id21([combine_properties.exe])
     id2(make -f policy_utilities.mak) --> id22([embed_policy_key.exe])
@@ -69,29 +69,48 @@ flowchart
     id2(make -f policy_utilities.mak) --> id217([simulated_sev_key_generation.exe])
   end
 
-  subgraph Build Policy Utilities
+  subgraph 1.1 Build Policy Utilities
   direction LR
     id3(make -f policy_generator.mak) --> id31([policy_generator.exe])
+  end
+
+```
+
+```mermaid
+flowchart LR
+  subgraph TOP
+    direction TB
+    subgraph B1
+        direction RL
+        i1 -->f1
+    end
+    subgraph B2
+        direction BT
+        i2 -->f2
+    end
   end
 ```
 
 ```mermaid
-flowchart
-  subgraph Generate the policy key and self-signed certificate
-  direction TB
-    id12(cert_utility.exe) --> id31(["--operation=generate-policy-key-and-test-keys"])
-    id31 -- "--policy_key_output_file" --> id32(policy_key_file.bin)
-    id31 -- "--policy_cert_output_file" --> id33(policy_cert_file.bin)
-    id31 -- "--platform_key_output_file" --> id34(platform_key_file.bin)
-    id31 -- "--attest_key_output_file" --> id35(attest_key_file.bin)
-  end
-
-  subgraph Embed policy key
-  direction LR
-    id33(policy_cert_file.bin) -- "--input" --> embed_policy_key.exe
-    embed_policy_key.exe -- "--output" --> id41([../policy_key.cc, linked with example_app.cc])
-  end
-
+ flowchart TB
+    subgraph sg3 [3. Generate the policy key and self-signed certificate]
+      direction TB
+      id12(cert_utility.exe) --> id31(["--operation=generate-policy-key-and-test-keys"])
+      id31 -- "--policy_key_output_file" --> id32(policy_key_file.bin)
+      id31 -- "--policy_cert_output_file" --> id33(policy_cert_file.bin)
+      id31 -- "--platform_key_output_file" --> id34(platform_key_file.bin)
+      id31 -- "--attest_key_output_file" --> id35(attest_key_file.bin)
+    end
+      subgraph sg4 [4. Embed policy key]
+        direction LR
+        id33(policy_cert_file.bin) -- "--input" --> embed_policy_key.exe
+        embed_policy_key.exe -- "--output" --> id41([../policy_key.cc, linked with example_app.cc])
+      end
+      subgraph sg5 [5. Compile example_app]
+        direction LR
+        id41([../policy_key.cc]) -- "#include" --> example_app.cc
+        example_app.cc -- "make -f example.mak" --> example_app.exe
+      end
 ```
 
 ----
