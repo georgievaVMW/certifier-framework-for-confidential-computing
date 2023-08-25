@@ -5,7 +5,7 @@ application and generating the policy for the Certifier Service using the policy
 utilities.
 
 This simple_app sample program provides an example of initializing
-and provisioning the Certifier Service with utility generated keys,
+and provisioning the Certifier Service with utility-generated keys,
 measurements and policy.
 
 The sample program will still need to construct the statement "The attestation-key says the
@@ -31,6 +31,70 @@ is useful.
 
 ```shell
 export EXAMPLE_DIR=$CERTIFIER_PROTOTYPE/sample_apps/simple_app
+```
+
+## Workflow
+
+Here is a pictorial depiction of the overall workflow you need to follow to build
+and execute this simple app.
+
+```mermaid
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+```
+
+```mermaid
+sequenceDiagram
+    participant Alice
+    participant Bob
+    Alice->>John: Hello John, how are you?
+    loop Healthcheck
+        John->>John: Fight against hypochondria
+    end
+    Note right of John: Rational thoughts <br/>prevail!
+    John-->>Alice: Great!
+    John->>Bob: How about you?
+    Bob-->>John: Jolly good!
+```
+
+```mermaid
+flowchart
+
+  subgraph Build Certificate-related Utilities
+  direction TB
+    id1(make -f cert_utility.mak) --> id11([cert_utility.exe])
+    id1(make -f cert_utility.mak) --> id12([measurement_init.exe])
+    id1(make -f cert_utility.mak) --> id13([key_utility.exe])
+  end
+
+  subgraph Build Policy Utilities
+  direction LR
+    id2(make -f policy_utilities.mak) --> id21([combine_properties.exe])
+    id2(make -f policy_utilities.mak) --> id22([embed_policy_key.exe])
+    id2(make -f policy_utilities.mak) --> id23([make_environment.exe])
+    id2(make -f policy_utilities.mak) --> id24([make_indirect_vse_clause.exe.exe])
+    id2(make -f policy_utilities.mak) --> id25([make_platform.exe.exe])
+    id2(make -f policy_utilities.mak) --> id26([make_property.exe.exe])
+    id2(make -f policy_utilities.mak) --> id27([make_signed_claim_from_vse_clause.exe.exe])
+    id2(make -f policy_utilities.mak) --> id28([make_simple_vse_clause.exe.exe])
+    id2(make -f policy_utilities.mak) --> id29([make_unary_vse_clause.exe.exe])
+    id2(make -f policy_utilities.mak) --> id210([measurement_utility.exe.exe])
+    id2(make -f policy_utilities.mak) --> id211([package_claims.exe])
+    id2(make -f policy_utilities.mak) --> id212([print_packaged_claims.exe])
+    id2(make -f policy_utilities.mak) --> id213([print_signed_claim.exe])
+    id2(make -f policy_utilities.mak) --> id214([print_vse_clause.exe])
+    id2(make -f policy_utilities.mak) --> id215([sample_sev_key_generation.exe])
+    id2(make -f policy_utilities.mak) --> id216([simulated_sev_attest.exe])
+    id2(make -f policy_utilities.mak) --> id217([simulated_sev_key_generation.exe])
+  end
+
+  subgraph Build Policy Utilities
+  direction LR
+    id3(make -f policy_generator.mak) --> id31([policy_generator.exe])
+  end
 ```
 
 ----
