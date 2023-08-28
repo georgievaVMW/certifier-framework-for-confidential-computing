@@ -27,6 +27,8 @@
 #include <openssl/hmac.h>
 #include <openssl/err.h>
 
+#include "support.h" // is it needed?
+
 #include "certifier_framework.h"
 
 using namespace certifier::framework;
@@ -47,7 +49,6 @@ DEFINE_string(platform_file_name, "platform_file.bin", "platform certificate");
 DEFINE_string(platform_attest_endorsement, "platform_attest_endorsement.bin", "platform endorsement of attest key");
 DEFINE_string(attest_key_file, "attest_key_file.bin", "attest key");
 DEFINE_string(measurement_file, "example_app.measurement", "measurement");
-
 
 // The test app performs five possible roles
 //    cold-init: This creates application keys and initializes the policy store.
@@ -105,7 +106,7 @@ void server_application(secure_authenticated_channel& channel) {
 int main(int an, char** av) {
   gflags::ParseCommandLineFlags(&an, &av, true);
   an = 1;
-  ::testing::InitGoogleTest(&an, av);
+  //::testing::InitGoogleTest(&an, av);
 
   if (FLAGS_operation == "") {
     printf("example_app.exe --print_all=true|false --operation=op --policy_host=policy-host-address --policy_port=policy-host-port\n");
@@ -148,7 +149,6 @@ int main(int an, char** av) {
     printf("Can't init simulated enclave\n");
     return 1;
   }
-
   // Standard algorithms for the enclave
   string public_key_alg("rsa-2048");
   string symmetric_key_alg("aes-256-cbc-hmac-sha256");
@@ -160,6 +160,17 @@ int main(int an, char** av) {
       printf("cold-init failed\n");
       ret = 1;
     }
+    RSA* r = RSA_new();
+    if (!key_to_RSA(app_trust_data->private_auth_key_, r)) {
+      printf("Failed to convert RSA key\n");
+      ret = 1;
+    }
+    // save RSA key to file
+    printf("Saving private key to key.pem\n");
+    FILE* f = fopen("key.pem", "wb");
+    PEM_write_RSAPrivateKey(f, r, nullptr, nullptr, 0, nullptr, nullptr);
+    fclose(f);
+    RSA_free(r);
   } else if (FLAGS_operation == "warm-restart") {
     if (!app_trust_data->warm_restart()) {
       printf("warm-restart failed\n");
@@ -171,6 +182,11 @@ int main(int an, char** av) {
       printf("certification failed\n");
       ret = 1;
     }
+    printf("Saving certificate to cert.der\n");
+    FILE *f = fopen("cert.der", "wb");
+    fwrite(app_trust_data->private_auth_key_.certificate().data(),
+           app_trust_data->private_auth_key_.certificate().size(), 1, f);
+    fclose(f);
   } else if (FLAGS_operation == "run-app-as-client") {
     string my_role("client");
     secure_authenticated_channel channel(my_role);
