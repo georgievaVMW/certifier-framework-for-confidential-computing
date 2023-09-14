@@ -58,7 +58,7 @@ DEFINE_string(unsealed_key_file, "./unsealed_key_file", "file containing the uns
 
 DEFINE_string(ark_cert_file, "./service/ark_cert.der", "ark cert file name");
 DEFINE_string(ask_cert_file, "./service/ask_cert.der", "ask cert file name");
-DEFINE_string(vcek_cert_file, "./service/vcek_cert.der", "vcek cert file name")
+DEFINE_string(vcek_cert_file, "./service/vcek_cert.der", "vcek cert file name");
 
 // The test app performs five possible roles
 //    cold-init: This creates application keys and initializes the policy store.
