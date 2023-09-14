@@ -56,6 +56,10 @@ DEFINE_string(secret_to_seal, "123", "secret to be sealed");
 DEFINE_string(sealed_key_file, "./sealed_key_file", "file containing the sealed key");
 DEFINE_string(unsealed_key_file, "./unsealed_key_file", "file containing the unsealed key");
 
+DEFINE_string(ark_cert_file, "./service/ark_cert.der", "ark cert file name");
+DEFINE_string(ask_cert_file, "./service/ask_cert.der", "ask cert file name");
+DEFINE_string(vcek_cert_file, "./service/vcek_cert.der", "vcek cert file name")
+
 // The test app performs five possible roles
 //    cold-init: This creates application keys and initializes the policy store.
 //    warm-restart:  This retrieves the policy store data.
@@ -123,7 +127,7 @@ int main(int an, char** av) {
   }
 
   SSL_library_init();
-  string enclave_type("simulated-enclave");
+  string enclave_type("sev-enclave");
   string enclave_id("vault-server");
   string purpose("authentication");
 
@@ -141,21 +145,13 @@ int main(int an, char** av) {
     return 1;
   }
 
-  // Init simulated enclave
-  string attest_key_file_name(FLAGS_data_dir);
-  attest_key_file_name.append(FLAGS_attest_key_file);
-  string platform_attest_file_name(FLAGS_data_dir);
-  platform_attest_file_name.append(FLAGS_platform_attest_endorsement);
-  string measurement_file_name(FLAGS_data_dir);
-  measurement_file_name.append(FLAGS_measurement_file);
-  string attest_endorsement_file_name(FLAGS_data_dir);
-  attest_endorsement_file_name.append(FLAGS_platform_attest_endorsement);
-
-  if (!app_trust_data->initialize_simulated_enclave_data(attest_key_file_name,
-      measurement_file_name, attest_endorsement_file_name)) {
-    printf("Can't init simulated enclave\n");
+  // Init sev enclave
+  if (!app_trust_data->initialize_sev_enclave_data(FLAGS_ark_cert_file,
+        FLAGS_ask_cert_file, FLAGS_vcek_cert_file)) {
+    printf("Can't init sev enclave\n");
     return 1;
   }
+  
   // Standard algorithms for the enclave
   string public_key_alg("rsa-2048");
   string symmetric_key_alg("aes-256-cbc-hmac-sha256");
