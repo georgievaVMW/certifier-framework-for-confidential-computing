@@ -47,6 +47,10 @@ DEFINE_string(ark_cert_file, "./service/ark_cert.der", "ark cert file name");
 DEFINE_string(ask_cert_file, "./service/ask_cert.der", "ask cert file name");
 DEFINE_string(vcek_cert_file, "./service/vcek_cert.der", "vcek cert file name");
 
+DEFINE_string(secret_to_seal, "123", "secret to be sealed");
+DEFINE_string(sealed_key_file, "./sealed_key_file", "file containing the sealed key");
+DEFINE_string(unsealed_key_file, "./unsealed_key_file", "file containing the unsealed key");
+
 
 // The test app performs five possible roles
 //    cold-init: This creates application keys and initializes the policy store.
@@ -149,6 +153,17 @@ int main(int an, char** av) {
       printf("cold-init failed\n");
       ret = 1;
     }
+    RSA* r = RSA_new();
+    if (!key_to_RSA(app_trust_data->private_auth_key_, r)) {
+      printf("Failed to convert RSA key\n");
+      ret = 1;
+    }
+    // save RSA key to file
+    printf("Saving private key to key.pem\n");
+    FILE* f = fopen("key.pem", "wb");
+    PEM_write_RSAPrivateKey(f, r, nullptr, nullptr, 0, nullptr, nullptr);
+    fclose(f);
+    RSA_free(r);
   } else if (FLAGS_operation == "warm-restart") {
     if (!app_trust_data->warm_restart()) {
       printf("warm-restart failed\n");
@@ -160,6 +175,11 @@ int main(int an, char** av) {
       printf("certification failed\n");
       ret = 1;
     }
+    printf("Saving certificate to cert.der\n");
+    FILE *f = fopen("cert.der", "wb");
+    fwrite(app_trust_data->private_auth_key_.certificate().data(),
+           app_trust_data->private_auth_key_.certificate().size(), 1, f);
+    fclose(f);
   } else if (FLAGS_operation == "run-app-as-client") {
     if (!app_trust_data->warm_restart()) {
       printf("warm-restart failed\n");
@@ -198,6 +218,67 @@ int main(int an, char** av) {
           app_trust_data->private_auth_key_,
           app_trust_data->private_auth_key_.certificate(),
           server_application);
+  } else if (FLAGS_operation == "seal") {
+    int  sealed_size_out = 256;
+    byte sealed[sealed_size_out];
+    memset(sealed, 0, sealed_size_out);
+    
+    if (1) {
+    	 printf("\nSeal\n");
+   	 printf("to seal  (%lu): ", FLAGS_secret_to_seal.size());
+    	 certifier::utilities::print_bytes(FLAGS_secret_to_seal.size(), (byte *)FLAGS_secret_to_seal.data());
+   	 printf("\n");
+    }
+    
+    if (!Seal(enclave_type,
+              enclave_id,
+              (int)FLAGS_secret_to_seal.size(),
+              (byte *)FLAGS_secret_to_seal.data(),
+              &sealed_size_out,
+              sealed)) {
+      printf("Application seal failed\n");
+      return 1;
+    }
+    
+    if (1) {
+      printf("sealed   (%d): ", sealed_size_out);
+      certifier::utilities::print_bytes(sealed_size_out, sealed);
+      printf("\n");
+    }
+   certifier::utilities::write_file(FLAGS_sealed_key_file, sealed_size_out, sealed);
+  } else if (FLAGS_operation == "unseal") {
+    int  sealed_size_out = 256;
+    byte sealed[sealed_size_out];
+    int  recovered_size = 128;
+    byte recovered[recovered_size];
+    memset(sealed, 0, sealed_size_out);
+    memset(recovered, 0, recovered_size);
+    certifier::utilities::read_file(FLAGS_sealed_key_file, &sealed_size_out, sealed);
+    
+    if (1) {
+      printf("Unseal\nto unseal   (%d): ", sealed_size_out);
+      certifier::utilities::print_bytes(sealed_size_out, sealed);
+      printf("\n");
+    }
+    
+    if (!Unseal(enclave_type,
+                enclave_id,
+                sealed_size_out,
+                sealed,
+                &recovered_size,
+                recovered))
+    return false;
+    
+    if (1) {
+      printf("recovered: (%d)", recovered_size);
+      certifier::utilities::print_bytes(recovered_size, recovered);
+      printf("\n");
+    }
+    
+    std::ofstream unsealedKeyFile(FLAGS_unsealed_key_file);
+    unsealedKeyFile << recovered;
+    unsealedKeyFile.close();
+    
   } else {
     printf("Unknown operation\n");
   }
